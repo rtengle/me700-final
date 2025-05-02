@@ -146,17 +146,6 @@ from dolfinx.io import XDMFFile
 from dolfinx.mesh import CellType, create_unit_square
 from dolfinx.nls.petsc import NewtonSolver
 
-try:
-    import pyvista as pv
-    import pyvistaqt as pvqt
-
-    have_pyvista = True
-    if pv.OFF_SCREEN:
-        pv.start_xvfb(wait=0.5)
-except ModuleNotFoundError:
-    print("pyvista and pyvistaqt are required to visualise the solution")
-    have_pyvista = False
-
 # Save all logging to file
 log.set_output_file("log.txt")
 # -
@@ -322,21 +311,6 @@ else:
 # vector
 V0, dofs = ME.sub(0).collapse()
 
-# Prepare viewer for plotting the solution during the computation
-if have_pyvista:
-    # Create a VTK 'mesh' with 'nodes' at the function dofs
-    topology, cell_types, x = plot.vtk_mesh(V0)
-    grid = pv.UnstructuredGrid(topology, cell_types, x)
-
-    # Set output data
-    grid.point_data["c"] = u.x.array[dofs].real
-    grid.set_active_scalars("c")
-
-    p = pvqt.BackgroundPlotter(title="concentration", auto_update=True)
-    p.add_mesh(grid, clim=[0, 1])
-    p.view_xy(True)
-    p.add_text(f"time: {t}", font_size=12, name="timelabel")
-
 c = u.sub(0)
 u0.x.array[:] = u.x.array
 while t < T:
@@ -346,19 +320,4 @@ while t < T:
     u0.x.array[:] = u.x.array
     file.write_function(c, t)
 
-    # Update the plot window
-    if have_pyvista:
-        p.add_text(f"time: {t:.2e}", font_size=12, name="timelabel")
-        grid.point_data["c"] = u.x.array[dofs].real
-        p.app.processEvents()
-
 file.close()
-
-# Update ghost entries and plot
-if have_pyvista:
-    u.x.scatter_forward()
-    grid.point_data["c"] = u.x.array[dofs].real
-    screenshot = None
-    if pv.OFF_SCREEN:
-        screenshot = "c.png"
-    pv.plot(grid, show_edges=True, screenshot=screenshot)

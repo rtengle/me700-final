@@ -31,4 +31,9 @@ def create_gmsh(params):
     gmsh.model.mesh.generate(gdim)
     # Stuff for plotting the mesh
 
-    return gmsh.model
+    # Converts gmsh model to a fenicsx mesh
+    gmsh_model_rank = 0
+    mesh_comm = MPI.COMM_WORLD
+    mesh_triplet = gmshio.model_to_mesh(gmsh.model, mesh_comm, gmsh_model_rank, gdim=2)
+
+    return mesh_triplet
