@@ -1,7 +1,7 @@
 from mpi4py import MPI
 from dolfinx.io import XDMFFile, gmshio
 from dolfinx.plot import vtk_mesh
-from dolfinx import fem, default_scalar_type, default_real_type, mesh
+from dolfinx import fem, default_scalar_type, default_real_type, mesh, plot
 from basix.ufl import element, mixed_element
 import gmsh
 import pyvista
@@ -18,7 +18,7 @@ params = dict()
 params['gamma0'] = 9 * np.pi/180
 params['minsize'] = 0.01
 params['maxsize'] = 0.01
-params['dt'] = 0.01
+params['dt'] = 1e-3
 
 # Function that creates the gmsh model & mesh
 model = create_gmsh(params)
@@ -34,13 +34,14 @@ n = ufl.FacetNormal(domain)
 He = element("Lagrange", domain.basix_cell(), 2, dtype=default_real_type)
 Se = mixed_element([He, He])
 S = fem.functionspace(domain, Se)
-facets = fem.locate_dofs_topological(S, 1, facet_markers.indices)
 
 # Define the boundary conditions on H
-bcH = fem.dirichletbc(default_scalar_type(0), facets, S.sub(0))
+Hfacets = fem.locate_dofs_topological(S.sub(0), 1, facet_markers.indices)
+bcH = fem.dirichletbc(default_real_type(1), Hfacets, S.sub(0))
 
 # Define the boundary condition on eta
-bceta = fem.dirichletbc(default_scalar_type(1), facets, S.sub(1))
+etafacets = fem.locate_dofs_topological(S.sub(1), 1, facet_markers.indices)
+bceta = fem.dirichletbc(default_real_type(0), etafacets, S.sub(1))
 
 bc = [bcH, bceta]
 
@@ -57,7 +58,7 @@ H0, eta0 = ufl.split(u0)
 
 # Initial conditions
 u.x.array[:] = 0.0
-u.sub(0).x.array[:] = 1.0 - 0.5
+u.sub(0).x.array[:] = 2.0
 u.x.scatter_forward()
 
 # Define our weak form
@@ -103,5 +104,35 @@ ksp.setFromOptions()
 u0.x.array[:] = u.x.array
 
 r = solver.solve(u)
+
+# pyvista 
+
+pyvista.OFF_SCREEN = True
+
+pyvista.start_xvfb()
+tdim = domain.topology.dim
+domain.topology.create_connectivity(tdim, tdim)
+topology, cell_types, geometry = plot.vtk_mesh(domain, tdim)
+grid = pyvista.UnstructuredGrid(topology, cell_types, geometry)
+
+S0, dofs = S.sub(0).collapse()
+
+u_topology, u_cell_types, u_geometry = plot.vtk_mesh(S0)
+
+u_grid = pyvista.UnstructuredGrid(u_topology, u_cell_types, u_geometry)
+u_grid.point_data["u"] = u.x.array[dofs].real
+u_grid.set_active_scalars("u")
+u_plotter = pyvista.Plotter()
+u_plotter.add_mesh(u_grid, show_edges=True)
+u_plotter.view_xy()
+
+warped = u_grid.warp_by_scalar()
+
+plotter = pyvista.Plotter()
+plotter.add_mesh(warped, show_edges=True)
+if not pyvista.OFF_SCREEN:
+    plotter.show()
+else:
+    figure = plotter.screenshot("fundamentals_mesh.png")
 
 pass
