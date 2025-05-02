@@ -39,10 +39,9 @@ def create_solver(params, mesh_triplet, theta_dist):
     # Test functions
     q, v = ufl.TestFunctions(S)
 
-    # Temperature Function
-    theta = fem.Function(Z)
-    theta.interpolate(theta_dist)
-    theta.x.scatter_forward()
+    # Theta
+    x = ufl.SpatialCoordinate(domain)
+    theta = theta_dist(x)
 
     # Define our current and previous surface
     u = fem.Function(S)
@@ -64,7 +63,7 @@ def create_solver(params, mesh_triplet, theta_dist):
     FH = (
         ufl.inner(H - H0, q) * ufl.dx
         - dt * params['S']/3 * ( ufl.inner( H**3, ufl.inner(ufl.grad(q) , ufl.grad(eta)) ) ) * ufl.dx
-        + dt * 1/2 * ( ufl.inner( H**2, ufl.inner(ufl.grad(q) , ufl.grad(theta)) ) ) * ufl.dx
+        + dt * 1/2 * H**2 * ufl.inner(ufl.grad(q) , ufl.grad(theta)) * ufl.dx
         + dt * q * ufl.inner(H**3 * ufl.grad(eta) - H**2 * ufl.grad(theta), n) * ufl.ds
     )
     Feta = (

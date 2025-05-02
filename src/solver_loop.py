@@ -26,15 +26,18 @@ params['minsize'] = 5e-3
 params['maxsize'] = 5e-3
 params['Hpin'] = 1
 params['etapin'] = 0
-params['H0'] = 1 + 9 * np.pi/180
+params['H0'] = 1
 params['dt'] = 1e-4
 params['S'] = 1e-1
-params['N'] = 10
+params['N'] = 50
+
+def theta(x):
+    return 3*ufl.exp(-100*x[0]**2 - 100*x[1]**2)
 
 mesh_triplet = create_gmsh(params)
-solver, u, u0, S = create_solver(params, mesh_triplet, lambda x: np.ones(x.shape[1]))
-
 domain, cell_markers, facet_markers = mesh_triplet
+
+solver, u, u0, S = create_solver(params, mesh_triplet, theta)
 
 file = XDMFFile(MPI.COMM_WORLD, "results/output.xdmf", "w")
 file.write_mesh(domain)
@@ -42,6 +45,8 @@ file.write_mesh(domain)
 V0, dofs = S.sub(0).collapse()
 
 h = u.sub(0)
+
+
 
 pyvista.OFF_SCREEN = True
 
@@ -71,7 +76,7 @@ sargs = dict(title_font_size=25, label_font_size=20, fmt="%.2e", color="black",
 # Adds in the mesh with a color bar and height
 renderer = plotter.add_mesh(warped, show_edges=True, lighting=False,
                             cmap=viridis, scalar_bar_args=sargs,
-                            clim=[params['Hpin'], max(u.x.array[dofs])])
+                            clim=[0, 2*max(u.x.array[dofs])])
 
 t = 0
 for i in range(params['N']):
