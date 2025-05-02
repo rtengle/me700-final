@@ -32,7 +32,7 @@ params['S'] = 1e-1
 params['N'] = 10
 
 mesh_triplet = create_gmsh(params)
-solver, u, u0, S = create_solver(params, mesh_triplet)
+solver, u, u0, S = create_solver(params, mesh_triplet, lambda x: np.ones(x.shape[1]))
 
 domain, cell_markers, facet_markers = mesh_triplet
 
@@ -62,7 +62,7 @@ grid.point_data["H"] = u.x.array[dofs]
 warped = grid.warp_by_scalar("H", factor=1)
 
 # Set the color map
-viridis = mpl.colormaps.get_cmap("viridis").resampled(25)
+viridis = mpl.colormaps.get_cmap("magma").resampled(25)
 
 # This is the arguments for the color bar
 sargs = dict(title_font_size=25, label_font_size=20, fmt="%.2e", color="black",
@@ -71,7 +71,7 @@ sargs = dict(title_font_size=25, label_font_size=20, fmt="%.2e", color="black",
 # Adds in the mesh with a color bar and height
 renderer = plotter.add_mesh(warped, show_edges=True, lighting=False,
                             cmap=viridis, scalar_bar_args=sargs,
-                            clim=[0, max(u.x.array[dofs])])
+                            clim=[params['Hpin'], max(u.x.array[dofs])])
 
 t = 0
 for i in range(params['N']):

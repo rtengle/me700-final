@@ -14,7 +14,7 @@ from dolfinx.nls.petsc import NewtonSolver
 
 from meshing import *
 
-def create_solver(params, mesh_triplet):
+def create_solver(params, mesh_triplet, theta_dist):
     # Get mesh information
     domain, cell_markers, facet_markers = mesh_triplet
     # Normal vector for weak formulation
@@ -41,7 +41,7 @@ def create_solver(params, mesh_triplet):
 
     # Temperature Function
     theta = fem.Function(Z)
-    theta.x.array[:] = 1.0
+    theta.interpolate(theta_dist)
     theta.x.scatter_forward()
 
     # Define our current and previous surface
