@@ -14,20 +14,14 @@ from dolfinx.nls.petsc import NewtonSolver
 
 from meshing import *
 
-def create_solver(params, mesh_triplet, theta_dist):
-    # Get mesh information
-    domain, cell_markers, facet_markers = mesh_triplet
-    # Normal vector for weak formulation
-    n = ufl.FacetNormal(domain)
-
-    s, s0, Z = get_surface_functions(domain)
-
-    # Mixed Element of H and eta, doing quadratic elements because curvature is super important
-    He = element("Lagrange", domain.basix_cell(), 1, dtype=default_real_type)
+def get_surface_functions(params, domain):
+    He = element("Lagrange", domain.basix_cell(), params['degree'], dtype=default_real_type)
     Se = mixed_element([He, He])
     S = fem.functionspace(domain, Se)
     Z = fem.functionspace(domain, He)
+    return S, Z
 
+def get_bc(params, S, facet_markers):
     # Define the boundary conditions on H dofs
     Hfacets = fem.locate_dofs_topological(S.sub(0), 1, facet_markers.indices)
     bcH = fem.dirichletbc(default_real_type(params['Hpin']), Hfacets, S.sub(0))
@@ -37,13 +31,15 @@ def create_solver(params, mesh_triplet, theta_dist):
     bceta = fem.dirichletbc(default_real_type(params['etapin']), etafacets, S.sub(1))
 
     bc = [bcH, bceta]
+    return
 
-    # Test functions
-    q, v = ufl.TestFunctions(S)
+def create_solver(params, mesh_triplet):
+    # Get mesh information
+    domain, cell_markers, facet_markers = mesh_triplet
+    # Normal vector for weak formulation
+    n = ufl.FacetNormal(domain)
 
-    # Theta
-    x = ufl.SpatialCoordinate(domain)
-    theta = theta_dist(x)
+    S, Z = get_functionspace(params, domain)
 
     # Define our current and previous surface
     s = fem.Function(S)
@@ -53,6 +49,15 @@ def create_solver(params, mesh_triplet, theta_dist):
     H, eta = ufl.split(s)
     H0, eta0 = ufl.split(s0)
 
+    # Test functions
+    q, v = ufl.TestFunctions(S)
+
+    bc = get_bc(params, S, facet_markers)
+
+    # Theta
+    x = ufl.SpatialCoordinate(domain)
+    theta = params['theta0'](x) - H * params['F/K']
+
     # Initial conditions
     s.x.array[:] = 0.0
     s.sub(0).x.array[:] = params['H0']
@@ -61,14 +66,13 @@ def create_solver(params, mesh_triplet, theta_dist):
     # Define our weak form
 
     dt = params['dt']
-
-    thetaS = theta - H
+    S = params['S']
 
     FH = (
         ufl.inner(H - H0, q) * ufl.dx
-        - dt * params['S']/3 * ( ufl.inner( H**3, ufl.inner(ufl.grad(q) , ufl.grad(eta)) ) ) * ufl.dx
-        + dt * 1/2 * H**2 * ufl.inner(ufl.grad(q) , ufl.grad(thetaS)) * ufl.dx
-        + dt * q * ufl.inner(H**3 * ufl.grad(eta) - H**2 * ufl.grad(thetaS), n) * ufl.ds
+        - dt * S/3 * ( ufl.inner( H**3, ufl.inner(ufl.grad(q) , ufl.grad(eta)) ) ) * ufl.dx
+        + dt * 1/2 * H**2 * ufl.inner(ufl.grad(q) , ufl.grad(theta)) * ufl.dx
+        + dt * q * ufl.inner(H**3 * ufl.grad(eta) - H**2 * ufl.grad(theta), n) * ufl.ds
     )
     Feta = (
         (ufl.inner(eta,v) + ufl.dot(ufl.grad(v), ufl.grad(H))) * ufl.dx
@@ -80,10 +84,15 @@ def create_solver(params, mesh_triplet, theta_dist):
 
     problem = NonlinearProblem(F, s, bcs=bc)
 
+    solver = get_solver(params, problem)
+
+    return solver, s, s0, S
+
+def get_solver(params, problem):
     solver = NewtonSolver(MPI.COMM_WORLD, problem)
     # Define the conergence criteria
     solver.convergence_criterion = "incremental"
-    solver.rtol = 1e-6
+    solver.rtol = params['rtol']
     solver.report = True
 
     # Modify the solver used, this is copied from the non-linear Poisson tutorial
@@ -101,4 +110,4 @@ def create_solver(params, mesh_triplet, theta_dist):
         opts[f"{option_prefix}pc_factor_mat_solver_type"] = "superlu_dist"
     ksp.setFromOptions()
 
-    return solver, s, s0, S
+    return solver
