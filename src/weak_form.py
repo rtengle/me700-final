@@ -15,6 +15,10 @@ from dolfinx.nls.petsc import NewtonSolver
 from meshing import *
 
 def create_solver(params, mesh_triplet, theta_dist):
+    # Function to get 2D formulation
+    F2, u2, bc2 = get_2D_form()
+    F3, u3, bc3 = get_2D_form()
+
     # Get mesh information
     domain, cell_markers, facet_markers = mesh_triplet
     # Normal vector for weak formulation
