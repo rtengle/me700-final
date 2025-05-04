@@ -34,7 +34,7 @@ params['N'] = 50
 def theta(x):
     return 3*ufl.exp(-100*x[0]**2 - 100*x[1]**2)
 
-mesh_triplet = create_gmsh(params)
+mesh_triplet = create_mesh(params)
 domain, cell_markers, facet_markers = mesh_triplet
 
 solver, u, u0, S = create_solver(params, mesh_triplet, theta)
