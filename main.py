@@ -1,0 +1,16 @@
+from src.run_test import *
+
+params = dict()
+params['gamma0'] = 1
+params['minsize'] = 5e-2
+params['maxsize'] = 5e-2
+params['Hpin'] = 1
+params['etapin'] = 0
+params['H0'] = 1
+params['dt'] = 2e-4
+params['S'] = 1e-3
+params['N'] = 88
+params['theta0'] = lambda x: 10*ufl.exp(-1e-2*x[0]**2 - 1e-2*x[1]**2)
+params['degree'] = 4
+params['F/K'] = 2
+params['rtol'] = 1e-6

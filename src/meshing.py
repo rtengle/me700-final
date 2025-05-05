@@ -15,7 +15,7 @@ from dolfinx.nls.petsc import NewtonSolver
 
 def create_mesh(params) -> tuple:
     """Creates the mesh for the fluid surface simulation. This is a flat 2D circle.
-    
+
     Parameters
     ----------
     params : dict
@@ -41,11 +41,8 @@ def create_mesh(params) -> tuple:
     # Starts gmsh CAD kernel
     gmsh.initialize()
 
-    # Our domain is a flat 2D disk. We first define a circle representing our domain
-    surface = gmsh.model.occ.addCircle(0, 0, 0, params['gamma0'], 1)
-
-    # We then specify a loop around the outer edge of our geometry
-    edge = gmsh.model.occ.addCurveLoop([surface], 1)
+    # Our domain is a flat 2D disk. This also generates an exterior loop around it
+    gmsh.model.occ.addDisk(0, 0, 0, params['gamma0'], params['gamma0'], 1)
 
     # We then synchronize the CAD model with our gmsh model allowing us to define our groups
     gmsh.model.occ.synchronize()
@@ -53,9 +50,9 @@ def create_mesh(params) -> tuple:
     # We now group together our fluid surface so that the mesh will build and the edge so that it's a facet
 
     # Groups together fluid surface
-    gmsh.model.addPhysicalGroup(gdim, [surface], 1, name='domain')
+    gmsh.model.addPhysicalGroup(2, [1], 1, name='domain')
     # Groups together fluid surface boundary
-    gmsh.model.addPhysicalGroup(gdim-1, [edge], 1, name='edge')
+    gmsh.model.addPhysicalGroup(1, [1], 1, name='edge')
 
     # We generate the mesh
 
@@ -63,7 +60,7 @@ def create_mesh(params) -> tuple:
     gmsh.option.setNumber("Mesh.CharacteristicLengthMin", params['minsize'])
     gmsh.option.setNumber("Mesh.CharacteristicLengthMax", params['maxsize'])
     # Generates mesh
-    gmsh.model.mesh.generate(gdim)
+    gmsh.model.mesh.generate(2)
 
     # Then conert it to a FEniCSx mesh
 

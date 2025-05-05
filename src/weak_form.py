@@ -14,7 +14,7 @@ from dolfinx.nls.petsc import NewtonSolver
 
 from meshing import *
 
-def get_surface_functions(params, domain):
+def get_functionspace(params, domain):
     He = element("Lagrange", domain.basix_cell(), params['degree'], dtype=default_real_type)
     Se = mixed_element([He, He])
     S = fem.functionspace(domain, Se)
@@ -30,8 +30,7 @@ def get_bc(params, S, facet_markers):
     etafacets = fem.locate_dofs_topological(S.sub(1), 1, facet_markers.indices)
     bceta = fem.dirichletbc(default_real_type(params['etapin']), etafacets, S.sub(1))
 
-    bc = [bcH, bceta]
-    return
+    return [bcH, bceta]
 
 def create_solver(params, mesh_triplet):
     # Get mesh information
@@ -66,11 +65,11 @@ def create_solver(params, mesh_triplet):
     # Define our weak form
 
     dt = params['dt']
-    S = params['S']
+    Sp = params['S']
 
     FH = (
         ufl.inner(H - H0, q) * ufl.dx
-        - dt * S/3 * ( ufl.inner( H**3, ufl.inner(ufl.grad(q) , ufl.grad(eta)) ) ) * ufl.dx
+        - dt * Sp/3 * ( ufl.inner( H**3, ufl.inner(ufl.grad(q) , ufl.grad(eta)) ) ) * ufl.dx
         + dt * 1/2 * H**2 * ufl.inner(ufl.grad(q) , ufl.grad(theta)) * ufl.dx
         + dt * q * ufl.inner(H**3 * ufl.grad(eta) - H**2 * ufl.grad(theta), n) * ufl.ds
     )
@@ -86,7 +85,7 @@ def create_solver(params, mesh_triplet):
 
     solver = get_solver(params, problem)
 
-    return solver, s, s0, S
+    return solver, (s, s0, S)
 
 def get_solver(params, problem):
     solver = NewtonSolver(MPI.COMM_WORLD, problem)
