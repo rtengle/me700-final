@@ -26,9 +26,6 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Load miniconda
-        run: module load miniconda
-
       - name: Create environment
         run: mamba create -n fenicsx-env
         
