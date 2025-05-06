@@ -16,7 +16,6 @@ jobs:
         matrix:
           platform: [ubuntu-latest]
           python-version: ["3.12.8"]
-          petsc-scalar-type: ["real"]
     runs-on: ${{ matrix.platform }}
     defaults:
       run:
@@ -26,14 +25,14 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
     
-      - uses: conda-incubator/setup-miniconda@v3
+      - uses: mamba-org/setup-micromamba@v2
         with:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
         
       - name: Install DOLFINx with MPICH (Unix-like)
         run: |
-          conda install -c conda-forge fenics-dolfinx mpich pyvista petsc=*=${{ matrix.petsc-scalar-type }}*
+          mamba install -c conda-forge fenics-dolfinx mpich pyvista
 
       - name: Install dependencies
         run: pip install -e .
