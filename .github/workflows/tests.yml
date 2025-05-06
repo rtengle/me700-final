@@ -15,7 +15,7 @@ jobs:
     strategy:
         matrix:
           platform: [ubuntu-latest]
-          python-version: ["3.12.8"]
+          python-version: ["3.13.3"]
     runs-on: ${{ matrix.platform }}
     defaults:
       run:
@@ -29,8 +29,6 @@ jobs:
         with:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
-          use-only-tar-bz2: true
-          miniforge-version: latest
         
       - name: Install DOLFINx with MPICH (Unix-like)
         run: conda install -c conda-forge fenics-dolfinx mpich pyvista
