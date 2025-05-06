@@ -1,4 +1,4 @@
-from src.run_test import *
+from run_test import *
 
 params = dict()
 params['gamma0'] = 1
@@ -7,10 +7,12 @@ params['maxsize'] = 5e-2
 params['Hpin'] = 1
 params['etapin'] = 0
 params['H0'] = 1
-params['dt'] = 2e-4
+params['dt'] = 1e-4
 params['S'] = 1e-3
-params['N'] = 88
-params['theta0'] = lambda x: 10*ufl.exp(-1e-2*x[0]**2 - 1e-2*x[1]**2)
-params['degree'] = 4
+params['N'] = 50
+params['theta0'] = lambda x: ufl.exp(-1e-2*x[0]**2 - 1e-2*x[1]**2)
+params['degree'] = 2
 params['F/K'] = 2
 params['rtol'] = 1e-6
+
+run_test(params)
