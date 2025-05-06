@@ -16,6 +16,7 @@ jobs:
         matrix:
           platform: [ubuntu-latest]
           python-version: ["3.12.8"]
+          petsc-scalar-type: ["real"]
     runs-on: ${{ matrix.platform }}
     defaults:
       run:
@@ -32,7 +33,7 @@ jobs:
         
       - name: Install DOLFINx with MPICH (Unix-like)
         run: |
-          conda install -c conda-forge fenics-dolfinx mpich pyvista
+          conda install -c conda-forge fenics-dolfinx mpich pyvista petsc=*=${{ matrix.petsc-scalar-type }}*
 
       - name: Install dependencies
         run: pip install -e .
