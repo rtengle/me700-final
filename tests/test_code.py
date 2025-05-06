@@ -1,6 +1,7 @@
 from meshing import *
 from weak_form import *
 from solver_loop import *
+from run_sim import *
 import pytest
 
 params = dict()
@@ -24,7 +25,7 @@ def test_meshing():
     assert True
 
 def test_functionspace():
-    mesh_triplet = create_mesh(params)
+    domain, cell_markers, facet_markers = create_mesh(params)
     S = get_functionspace(params, domain)
     assert True
 
