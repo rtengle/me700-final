@@ -19,7 +19,7 @@ from meshing import *
 from weak_form import *
 from solver_loop import *
 
-def run_test(params):
+def run_sim(params):
     mesh_triplet = create_mesh(params)
     solver, function_triplet = create_solver(params, mesh_triplet)
     solver_loop(params, mesh_triplet, solver, function_triplet)

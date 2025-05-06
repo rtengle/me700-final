@@ -18,16 +18,15 @@ def get_functionspace(params, domain):
     He = element("Lagrange", domain.basix_cell(), params['degree'], dtype=default_real_type)
     Se = mixed_element([He, He])
     S = fem.functionspace(domain, Se)
-    Z = fem.functionspace(domain, He)
-    return S, Z
+    return S
 
 def get_bc(params, S, facet_markers):
     # Define the boundary conditions on H dofs
-    Hfacets = fem.locate_dofs_topological(S.sub(0), 1, facet_markers.indices)
+    Hfacets = fem.locate_dofs_topological(S.sub(0), 1, facet_markers.find(1))
     bcH = fem.dirichletbc(default_real_type(params['Hpin']), Hfacets, S.sub(0))
 
     # Define the boundary condition on eta dofs
-    etafacets = fem.locate_dofs_topological(S.sub(1), 1, facet_markers.indices)
+    etafacets = fem.locate_dofs_topological(S.sub(1), 1, facet_markers.find(1))
     bceta = fem.dirichletbc(default_real_type(params['etapin']), etafacets, S.sub(1))
 
     return [bcH, bceta]
@@ -38,7 +37,7 @@ def create_solver(params, mesh_triplet):
     # Normal vector for weak formulation
     n = ufl.FacetNormal(domain)
 
-    S, Z = get_functionspace(params, domain)
+    S = get_functionspace(params, domain)
 
     # Define our current and previous surface
     s = fem.Function(S)

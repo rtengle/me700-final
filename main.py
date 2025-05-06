@@ -1,4 +1,4 @@
-from run_test import *
+from run_sim import *
 
 params = dict()
 params['gamma0'] = 1
@@ -15,4 +15,4 @@ params['degree'] = 2
 params['F/K'] = 2
 params['rtol'] = 1e-6
 
-run_test(params)
+run_sim(params)
