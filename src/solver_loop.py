@@ -18,7 +18,9 @@ from dolfinx.nls.petsc import NewtonSolver
 from meshing import *
 from weak_form import *
 
-def configure_gif_plotter(params, warped, plotter):
+def add_colorbar(params, warped, plotter):
+    """Internal function to configure gif plotter
+    """
     # Set the color map
     cmap = mpl.colormaps.get_cmap("magma").resampled(50)
 
@@ -29,9 +31,9 @@ def configure_gif_plotter(params, warped, plotter):
     # Adds in the mesh with a color bar and height
     renderer = plotter.add_mesh(warped, show_edges=True, lighting=False, cmap=cmap, scalar_bar_args=sargs, clim=[0, 2])
 
-    return renderer
-
 def update_warped(warped, grid, plotter, sx):
+    """Internal function to update gif plot
+    """
     # Replaces the height map from before
     new_warped = grid.warp_by_scalar("H", factor=1)
     warped.points[:, :] = new_warped.points
@@ -40,21 +42,40 @@ def update_warped(warped, grid, plotter, sx):
     plotter.write_frame()
 
 def solver_loop(params, mesh_triplet, solver, function_triplet):
+    """Iterative loop that performs the implicit solver scheme for a series of timesteps
+
+    Arguments
+    ---------
+        params : dict
+        Dictionary containing all user-defined settings for the simulation. Needs to contain at least the following:
+        plot : bool
+            True/False for whether or not to plot the gif
+        figurename : str
+            Name of figure file
+        foldername : str
+            Name of folder the results are stored in
+        filename : str
+            Name of file the results are written to
+        N : int
+            Number of timesteps the analysis performs
+        dt : float
+            Time interval between steps
+    """
+    # Unpacks mesh and function triplets
     domain, cell_markers, facet_markers = mesh_triplet
     s, s0, S = function_triplet
-    
-    # file = XDMFFile(MPI.COMM_WORLD, "results/output.xdmf", "w")
-    # file.write_mesh(domain)
 
-    S0, dofs = S.sub(0).collapse()
+    # Isolates the functionspace and node value locations (dofs) for H
+    SH, dofs = S.sub(0).collapse()
 
-    h = s.sub(0)
-
+    # pyvista configuration
     if params['plot']:
+        # Sets pyvista to not plot on-screen and starts the virtual framebuffer
         pyvista.OFF_SCREEN = True
         pyvista.start_xvfb()
 
-        grid = pyvista.UnstructuredGrid(*vtk_mesh(S0))
+        # Gets an unstructured grid from the H function space
+        grid = pyvista.UnstructuredGrid(*vtk_mesh(SH))
 
         # Create a plotter that will create a .gif
         plotter = pyvista.Plotter()
@@ -63,22 +84,35 @@ def solver_loop(params, mesh_triplet, solver, function_triplet):
         # Stores the H data
         grid.point_data["H"] = s.x.array[dofs]
         warped = grid.warp_by_scalar("H", factor=1)
-        # I think warp adds a height map on a grid
 
-        renderer = configure_gif_plotter(params, warped, plotter)
+        # Adds in the colorbar to the plot
+        add_colorbar(params, warped, plotter)
 
+    # Writes H and eta to file using vtx
     with io.VTXWriter(domain.comm, f'{params['foldername']}/{params['filename']}.bp', [s.sub(0), s.sub(1)]) as vtx:
+        # Sets initial time
         t = 0
+        # Writes the current H and eta at time 0
         vtx.write(t)
+        # Time stepping loop
         for i in range(params['N']):
+            # Advances time
             t += params['dt']
+            # Sets previous surface to the current surface
             s0.x.array[:] = s.x.array
+            # Solves for the new surface
             r = solver.solve(s)
+            # Outputs where in the iteration process we are
             print(f"Step {i}: num iterations: {r[0]}")
+            # Writes the current surface at time t
             vtx.write(t)
+            # Updates the gif plot
             if params['plot']:
                 update_warped(warped, grid, plotter, s.x.array[dofs])
-
+        
+        # Closes the plot
         if params['plot']:
             plotter.close()
+
+        # Closes the vtx file
         vtx.close()

@@ -20,6 +20,13 @@ from weak_form import *
 from solver_loop import *
 
 def run_sim(params):
+    """Main method used to simulate fluid surface deformation
+
+    Arguments
+    ---------
+    params : dict
+        Dictionary of simulation parameters. See README for info about all the parameters
+    """
     mesh_triplet = create_mesh(params)
     solver, function_triplet = create_solver(params, mesh_triplet)
     solver_loop(params, mesh_triplet, solver, function_triplet)
