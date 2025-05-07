@@ -22,16 +22,17 @@ def get_functionspace(params, domain):
     S = fem.functionspace(domain, Se)
     return S
 
-def get_bc(params, S, facet_markers):
+def get_bc(params, S, domain, facet_markers):
     """Internal function used to get the dirichlet BC for H and eta
     """
+    x = ufl.SpatialCoordinate(domain)
     # Define the boundary conditions on H dofs
     Hfacets = fem.locate_dofs_topological(S.sub(0), 1, facet_markers.find(1))
-    bcH = fem.dirichletbc(params['Hpin'], Hfacets, S.sub(0))
+    bcH = fem.dirichletbc(params['Hpin'](x), Hfacets, S.sub(0))
 
     # Define the boundary condition on eta dofs
     etafacets = fem.locate_dofs_topological(S.sub(1), 1, facet_markers.find(1))
-    bceta = fem.dirichletbc(params['etapin'], etafacets, S.sub(1))
+    bceta = fem.dirichletbc(params['etapin'](x), etafacets, S.sub(1))
 
     return [bcH, bceta]
 
@@ -94,11 +95,6 @@ def create_solver(params, mesh_triplet):
     s.sub(0).name = 'Height'
     s.sub(1).name = 'Curvature'
 
-    # Initial conditions
-    s.x.array[:] = 0.0
-    s.sub(0).interpolate(params['H0'])
-    s.x.scatter_forward()
-
     # Define our weak form
 
     dt = params['dt']
@@ -127,7 +123,15 @@ def create_solver(params, mesh_triplet):
     F = FH + Feta
 
     # Get the boundary conditions for the system
-    bc = get_bc(params, S, facet_markers)
+    bc = get_bc(params, S, domain, facet_markers)
+
+    # Initial conditions
+    s.x.array[:] = 0.0
+    if type(params['H0'](x)) is np.float64:
+        s.sub(0).x.array[:] = params['H0'](x)
+    else:
+        s.sub(0).interpolate(params['H0'])
+    s.x.scatter_forward()
 
     # Set up and configure our non-linear problem solver
 
