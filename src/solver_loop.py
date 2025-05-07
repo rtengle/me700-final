@@ -91,3 +91,4 @@ def solver_loop(params, mesh_triplet, solver, function_triplet):
 
         if params['plot']:
             plotter.close()
+        vtx.close()
