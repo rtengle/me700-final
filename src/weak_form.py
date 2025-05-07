@@ -14,57 +14,65 @@ from dolfinx.nls.petsc import NewtonSolver
 
 from meshing import *
 
+def get_functionspace(params, domain):
+    He = element("Lagrange", domain.basix_cell(), params['degree'], dtype=default_real_type)
+    Se = mixed_element([He, He])
+    S = fem.functionspace(domain, Se)
+    return S
+
+def get_bc(params, S, facet_markers):
+    # Define the boundary conditions on H dofs
+    Hfacets = fem.locate_dofs_topological(S.sub(0), 1, facet_markers.find(1))
+    bcH = fem.dirichletbc(default_real_type(params['Hpin']), Hfacets, S.sub(0))
+
+    # Define the boundary condition on eta dofs
+    etafacets = fem.locate_dofs_topological(S.sub(1), 1, facet_markers.find(1))
+    bceta = fem.dirichletbc(default_real_type(params['etapin']), etafacets, S.sub(1))
+
+    return [bcH, bceta]
+
 def create_solver(params, mesh_triplet):
     # Get mesh information
     domain, cell_markers, facet_markers = mesh_triplet
     # Normal vector for weak formulation
     n = ufl.FacetNormal(domain)
 
-    # Mixed Element of H and eta, doing quadratic elements because curvature is super important
-    He = element("Lagrange", domain.basix_cell(), 1, dtype=default_real_type)
-    Se = mixed_element([He, He])
-    S = fem.functionspace(domain, Se)
-    Z = fem.functionspace(domain, He)
+    S = get_functionspace(params, domain)
 
-    # Define the boundary conditions on H dofs
-    Hfacets = fem.locate_dofs_topological(S.sub(0), 1, facet_markers.indices)
-    bcH = fem.dirichletbc(default_real_type(params['Hpin']), Hfacets, S.sub(0))
+    # Define our current and previous surface
+    s = fem.Function(S)
+    s0 = fem.Function(S)
 
-    # Define the boundary condition on eta dofs
-    etafacets = fem.locate_dofs_topological(S.sub(1), 1, facet_markers.indices)
-    bceta = fem.dirichletbc(default_real_type(params['etapin']), etafacets, S.sub(1))
-
-    bc = [bcH, bceta]
+    # Split into H, eta and H0, eta0
+    H, eta = ufl.split(s)
+    H0, eta0 = ufl.split(s0)
 
     # Test functions
     q, v = ufl.TestFunctions(S)
 
-    # Temperature Function
-    theta = fem.Function(Z)
-    theta.x.array[:] = 1.0
-    theta.x.scatter_forward()
+    bc = get_bc(params, S, facet_markers)
 
-    # Define our current and previous surface
-    u = fem.Function(S)
-    u0 = fem.Function(S)
+    # Theta
+    x = ufl.SpatialCoordinate(domain)
+    theta = params['theta0'](x) - H * params['F/K']
 
-    # Split into H, eta and H0, eta0
-    H, eta = ufl.split(u)
-    H0, eta0 = ufl.split(u0)
+    s.sub(0).name = 'Height'
+    s.sub(1).name = 'Curvature'
 
     # Initial conditions
-    u.x.array[:] = 0.0
-    u.sub(0).x.array[:] = params['H0']
-    u.x.scatter_forward()
+    s.x.array[:] = 0.0
+    s.sub(0).x.array[:] = params['H0']
+    s.x.scatter_forward()
 
     # Define our weak form
 
     dt = params['dt']
+    Sp = params['S']
 
     FH = (
         ufl.inner(H - H0, q) * ufl.dx
-        - dt * params['S']/3 * ( ufl.inner( H**3, ufl.inner(ufl.grad(q) , ufl.grad(eta)) ) ) * ufl.dx
-        + dt * 1/2 * ( ufl.inner( H**2, ufl.inner(ufl.grad(q) , ufl.grad(theta)) ) ) * ufl.dx
+        - dt * Sp/3 * ( ufl.inner( H**3, ufl.inner(ufl.grad(q) , ufl.grad(eta)) ) ) * ufl.dx
+        + dt * 1/2 * H**2 * ufl.inner(ufl.grad(q) , ufl.grad(theta)) * ufl.dx
         + dt * q * ufl.inner(H**3 * ufl.grad(eta) - H**2 * ufl.grad(theta), n) * ufl.ds
     )
     Feta = (
@@ -75,12 +83,17 @@ def create_solver(params, mesh_triplet):
 
     # Set up and configure our non-linear problem solver
 
-    problem = NonlinearProblem(F, u, bcs=bc)
+    problem = NonlinearProblem(F, s, bcs=bc)
 
+    solver = get_solver(params, problem)
+
+    return solver, (s, s0, S)
+
+def get_solver(params, problem):
     solver = NewtonSolver(MPI.COMM_WORLD, problem)
     # Define the conergence criteria
     solver.convergence_criterion = "incremental"
-    solver.rtol = 1e-6
+    solver.rtol = params['rtol']
     solver.report = True
 
     # Modify the solver used, this is copied from the non-linear Poisson tutorial
@@ -98,4 +111,4 @@ def create_solver(params, mesh_triplet):
         opts[f"{option_prefix}pc_factor_mat_solver_type"] = "superlu_dist"
     ksp.setFromOptions()
 
-    return solver, u, u0, S
+    return solver

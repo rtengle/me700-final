@@ -13,27 +13,66 @@ import sys
 from dolfinx.fem.petsc import NonlinearProblem
 from dolfinx.nls.petsc import NewtonSolver
 
-def create_gmsh(params):
-    gmsh.initialize()
-    surface = gmsh.model.occ.addDisk(0, 0, 0, params['gamma0'], params['gamma0'])
+def create_mesh(params) -> tuple:
+    """Creates the mesh for the fluid surface simulation. This is a flat 2D circle.
 
+    Parameters
+    ----------
+    params : dict
+        Dictionary containing all user-defined settings for the test. Needs to contain at least the following:
+        gamma0 : float
+            Half-arc length of analyzed region
+        minsize : float
+            Minimum element size
+        maxsize : float
+            Maximum element size
+
+    Returns
+    -------
+    mesh_triplet : tuple
+        Triplet containing the following:
+        domain
+            DolfinX mesh object
+        cell_markers
+            Topological domain tags for the mesh
+        facet_markers
+            Topological facet tags for the mesh
+    """
+    # Starts gmsh CAD kernel
+    gmsh.initialize()
+    gmsh.clear()
+
+    # Our domain is a flat 2D disk. This also generates an exterior loop around it
+    # gmsh.model.occ.addDisk(0, 0, 0, params['gamma0'], params['gamma0'], 1)
+
+    gmsh.model.occ.addCircle(0, 0, 0, 1, 1, 0, params['gamma0'], [-1, 0, 0])
+    gmsh.model.occ.revolve([(1,1)], 0, 0, 0, 0, 0, 1, 2*np.pi)
+    gmsh.model.occ.addSurfaceLoop([1], 2)
+
+    # We then synchronize the CAD model with our gmsh model allowing us to define our groups
     gmsh.model.occ.synchronize()
-    # 2D Surface
-    gdim = 2
-    # Groups together surface entities
-    gmsh.model.addPhysicalGroup(gdim, [surface], 1, name='domain')
-    # Groups together boundary entities
-    gmsh.model.addPhysicalGroup(gdim-1, [surface], 1, name='edge')
+    
+    # We now group together our fluid surface so that the mesh will build and the edge so that it's a facet
+
+    # Groups together fluid surface
+    gmsh.model.addPhysicalGroup(2, [1], 1, name='domain')
+    # Groups together fluid surface boundary
+    gmsh.model.addPhysicalGroup(1, [3], 1, name='edge')
+
+    # We generate the mesh
+
     # Sets the mesh sizing
     gmsh.option.setNumber("Mesh.CharacteristicLengthMin", params['minsize'])
     gmsh.option.setNumber("Mesh.CharacteristicLengthMax", params['maxsize'])
     # Generates mesh
-    gmsh.model.mesh.generate(gdim)
-    # Stuff for plotting the mesh
+    gmsh.model.mesh.generate(2)
+
+    # Then conert it to a FEniCSx mesh
 
     # Converts gmsh model to a fenicsx mesh
     gmsh_model_rank = 0
     mesh_comm = MPI.COMM_WORLD
     mesh_triplet = gmshio.model_to_mesh(gmsh.model, mesh_comm, gmsh_model_rank, gdim=2)
+    # Triplet contains: mesh object, cell tags, and facet tags
 
     return mesh_triplet

@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "me700-final"
+version = "0.0.0"
+authors = [
+  { name="Ryan Engle", email="rtengle@bu.edu" },
+]
+description = "me700-final workflow"
+readme = "README.md"
+license = { file="LICENSE" }
+requires-python = ">=3.13.3"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent :: MIT License"
+]
+dependencies = [
+    "numpy==2.2.4",
+    "pytest==8.3.4",
+    "pytest-cov==6.0.0",
+    "matplotlib==3.10.0",
+    "gmsh==4.13.1",
+    "imageio==2.37.0"
+]
+
+[project.urls]
+"Homepage" = "https://github.com/rtengle/bisection-method"
+"Bug Tracker" = "https://github.com/rtengle/bisection-method/issues"
