@@ -19,9 +19,6 @@ jobs:
           platform: [ubuntu-latest]
           python-version: ["3.13.3"]
     runs-on: ${{ matrix.platform }}
-    defaults:
-      run:
-        shell: bash -el {0}
 
     steps:
       - name: Check out repository
@@ -32,8 +29,10 @@ jobs:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
           miniforge-version: latest
+
         
       - name: Install DOLFINx with MPICH (Unix-like)
+        shell: bash -el {0}
         run: conda install -c conda-forge fenics-dolfinx mpich pyvista
 
       - name: Install dependencies
