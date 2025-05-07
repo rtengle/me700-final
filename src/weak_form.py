@@ -110,14 +110,14 @@ def create_solver(params, mesh_triplet):
     # Weak formulation for surface height
     FH = (
         ufl.inner(H - H0, q) * ufl.dx
-        - dt * Sp/3 * ( ufl.inner( H**3, ufl.inner(ufl.grad(q) , ufl.grad(eta)) ) ) * ufl.dx
-        + dt * 1/2 * H**2 * ufl.inner(ufl.grad(q) , ufl.grad(theta)) * ufl.dx
+        - dt * Sp/3 * H**3 * ufl.inner(ufl.grad(q), ufl.grad(eta)) * ufl.dx
+        + dt * 1/2 * H**2 * ufl.inner(ufl.grad(q), ufl.grad(theta)) * ufl.dx
         + dt * q * ufl.inner(H**3 * ufl.grad(eta) - H**2 * ufl.grad(theta), n) * ufl.ds
     )
     # Weak formulation for eta-H relationship
     Feta = (
         (ufl.inner(eta,v) + ufl.dot(ufl.grad(v), ufl.grad(H))) * ufl.dx
-        -  ufl.inner(v * ufl.grad(H), n)* ufl.ds
+        -  ufl.inner(v * ufl.grad(H), n) * ufl.ds
     )
     # Combine together to get complete weak formulation
     F = FH + Feta

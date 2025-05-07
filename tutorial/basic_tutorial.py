@@ -17,18 +17,30 @@ from dolfinx import default_real_type
 #
 # Finally we save our results to the results folder under the name data, set plot to true, and save our figure as H_animation
 
+S = 0.1
+FK = 2
+
+def H(x):
+    r2 = x[0]**2 + x[1]**2
+    return 1+r2-r2**2
+
+def theta(x):
+    r2 = x[0]**2 + x[1]**2
+    return -64/3*S*(1/2*r2 + 1/4*r2**2 - 1/6*r2**3) + FK*(1+r2-r2**2)
+
 params = dict()
-params['gamma0'] = np.pi/4
+params['flat'] = True
+params['gamma0'] = 1
 params['minsize'] = 5e-2
 params['maxsize'] = 5e-2
 params['Hpin'] = lambda x: default_real_type(1)
-params['etapin'] = lambda x: default_real_type(0)
-params['H0'] = lambda x: default_real_type(1)
-params['dt'] = 1e-1
-params['S'] = 1e-1
-params['N'] = 25
-params['theta0'] = lambda x: ufl.exp(-1e-2*x[0]**2 - 1e-2*x[1]**2)
-params['F/K'] = 2
+params['etapin'] = lambda x: default_real_type(-12)
+params['H0'] = H
+params['dt'] = 1e-3
+params['S'] = S
+params['N'] = 20
+params['theta0'] = theta
+params['F/K'] = FK
 params['degree'] = 2
 params['rtol'] = 1e-6
 params['filename'] = 'data'

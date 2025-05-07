@@ -42,11 +42,14 @@ def create_mesh(params) -> tuple:
     gmsh.initialize()
     gmsh.clear()
 
-    # Our domain is a spherical dome with a covered range of ± gamma0. We start by creating a circulat arc:
-    gmsh.model.occ.addCircle(0, 0, 0, 1, 1, 0, params['gamma0'], [-1, 0, 0])
-    # We then revolve it and make a surface loop, creating our surface
-    gmsh.model.occ.revolve([(1,1)], 0, 0, 0, 0, 0, 1, 2*np.pi)
-    gmsh.model.occ.addSurfaceLoop([1], 2)
+    if params['flat']:
+        gmsh.model.occ.addDisk(0, 0, 0, params['gamma0'], params['gamma0'], 1)
+    else:
+        # Our domain is a spherical dome with a covered range of ± gamma0. We start by creating a circulat arc:
+        gmsh.model.occ.addCircle(0, 0, 0, 1, 1, 0, params['gamma0'], [-1, 0, 0])
+        # We then revolve it and make a surface loop, creating our surface
+        gmsh.model.occ.revolve([(1,1)], 0, 0, 0, 0, 0, 1, 2*np.pi)
+        gmsh.model.occ.addSurfaceLoop([1], 2)
 
     # We then synchronize the CAD model with our gmsh model allowing us to define our groups
     gmsh.model.occ.synchronize()
@@ -56,7 +59,10 @@ def create_mesh(params) -> tuple:
     # Tags the surface domain
     gmsh.model.addPhysicalGroup(2, [1], 1, name='domain')
     # Tags the outer edge. 1 is the initial arc, 2 is the inner point, 3 is the outer edge
-    gmsh.model.addPhysicalGroup(1, [3], 1, name='edge')
+    if params['flat']:
+        gmsh.model.addPhysicalGroup(1, [1], 1, name='edge')
+    else:
+        gmsh.model.addPhysicalGroup(1, [3], 1, name='edge')
 
     # We now generate the mesh
 
