@@ -21,7 +21,8 @@ dependencies = [
     "pytest==8.3.4",
     "pytest-cov==6.0.0",
     "matplotlib==3.10.0",
-    "gmsh==4.13.1"
+    "gmsh==4.13.1",
+    "imageio==2.37.0"
 ]
 
 [project.urls]
