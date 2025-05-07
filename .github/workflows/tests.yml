@@ -5,10 +5,12 @@ on:
     branches:
       - main
       - 2D_sim
+      - yml_test_branch
   pull_request:
     branches:
       - main
       - 2D_sim
+      - yml_test_branch
 
 jobs:
   test:
