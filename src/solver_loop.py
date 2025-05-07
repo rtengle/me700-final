@@ -3,7 +3,7 @@ import os
 from mpi4py import MPI
 from dolfinx.io import XDMFFile, gmshio
 from dolfinx.plot import vtk_mesh
-from dolfinx import fem, default_scalar_type, default_real_type, mesh
+from dolfinx import fem, default_scalar_type, default_real_type, mesh, io
 from basix.ufl import element, mixed_element
 import gmsh
 import pyvista
@@ -67,18 +67,18 @@ def solver_loop(params, mesh_triplet, solver, function_triplet):
 
         renderer = configure_gif_plotter(params, warped, plotter)
 
-    # with io.VTXWriter(domain.comm, f'{params['foldername']}/{params['filename']}.bp', [s.sub(0), s.sub(1)]) as vtx:
-    t = 0
-    # vtx.write(t)
-    for i in range(params['N']):
-        t += params['dt']
-        s0.x.array[:] = s.x.array
-        r = solver.solve(s)
-        print(f"Step {i}: num iterations: {r[0]}")
-        # vtx.write(t)
-        if params['plot']:
-            update_warped(warped, grid, plotter, s.x.array[dofs])
+    with io.VTXWriter(domain.comm, f'{params['foldername']}/{params['filename']}.bp', [s.sub(0), s.sub(1)]) as vtx:
+        t = 0
+        vtx.write(t)
+        for i in range(params['N']):
+            t += params['dt']
+            s0.x.array[:] = s.x.array
+            r = solver.solve(s)
+            print(f"Step {i}: num iterations: {r[0]}")
+            vtx.write(t)
+            if params['plot']:
+                update_warped(warped, grid, plotter, s.x.array[dofs])
 
-    if params['plot']:
-        plotter.close()
-    # vtx.close()
+        if params['plot']:
+            plotter.close()
+        vtx.close()
