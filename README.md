@@ -10,6 +10,8 @@
 
 This codebase simulates the surface evolution of a temperature-controlled liquid space telescope using FEniCSx. In this system, a thin film of fluid sits atop a solid spherical surface with a prescribed base temperature. The top surface is free to deform and points into the deep vacuum of space where energy is released via radiation. 
 
+![alt text](REAME_figures/H_animation.gif)
+
 The dynamics of this system is largely governed by two mechanisms: Surface tension where curvature along the fluid surface generates a surface pressure; and themocapillary flow where temperature gradients along a surface generates shear flow, draining the thin film from hot spots and into cold spots. With these effects the surface can be manipulated by prescribing a temperature profile at the solid surface the film sits atop. For the liquid space telescope, the following non-dimensional equation describes the time evolution of the fluid surface:
 
 ```math
