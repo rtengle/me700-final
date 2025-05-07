@@ -56,6 +56,9 @@ def create_solver(params, mesh_triplet):
     x = ufl.SpatialCoordinate(domain)
     theta = params['theta0'](x) - H * params['F/K']
 
+    s.sub(0).name = 'Height'
+    s.sub(1).name = 'Curvature'
+
     # Initial conditions
     s.x.array[:] = 0.0
     s.sub(0).x.array[:] = params['H0']

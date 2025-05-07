@@ -39,8 +39,8 @@ def create_mesh(params) -> tuple:
             Topological facet tags for the mesh
     """
     # Starts gmsh CAD kernel
-    gmsh.clear()
     gmsh.initialize()
+    gmsh.clear()
 
     # Our domain is a flat 2D disk. This also generates an exterior loop around it
     gmsh.model.occ.addDisk(0, 0, 0, params['gamma0'], params['gamma0'], 1)
