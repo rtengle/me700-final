@@ -3,6 +3,8 @@ from weak_form import *
 from solver_loop import *
 from run_sim import *
 import pytest
+import numpy as np
+import ufl
 
 params = dict()
 params['gamma0'] = np.pi/4
