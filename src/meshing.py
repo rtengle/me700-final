@@ -14,12 +14,12 @@ from dolfinx.fem.petsc import NonlinearProblem
 from dolfinx.nls.petsc import NewtonSolver
 
 def create_mesh(params) -> tuple:
-    """Creates the mesh for the fluid surface simulation. This is a flat 2D circle.
+    """Creates the mesh for the fluid surface simulation. This is a 2D spherical shell.
 
     Parameters
     ----------
     params : dict
-        Dictionary containing all user-defined settings for the test. Needs to contain at least the following:
+        Dictionary containing all user-defined settings for the simulation. Needs to contain at least the following:
         gamma0 : float
             Half-arc length of analyzed region
         minsize : float
@@ -38,28 +38,27 @@ def create_mesh(params) -> tuple:
         facet_markers
             Topological facet tags for the mesh
     """
-    # Starts gmsh CAD kernel
+    # Starts gmsh CAD kernel and clears any data
     gmsh.initialize()
     gmsh.clear()
 
-    # Our domain is a flat 2D disk. This also generates an exterior loop around it
-    # gmsh.model.occ.addDisk(0, 0, 0, params['gamma0'], params['gamma0'], 1)
-
+    # Our domain is a spherical dome with a covered range of ± gamma0. We start by creating a circulat arc:
     gmsh.model.occ.addCircle(0, 0, 0, 1, 1, 0, params['gamma0'], [-1, 0, 0])
+    # We then revolve it and make a surface loop, creating our surface
     gmsh.model.occ.revolve([(1,1)], 0, 0, 0, 0, 0, 1, 2*np.pi)
     gmsh.model.occ.addSurfaceLoop([1], 2)
 
     # We then synchronize the CAD model with our gmsh model allowing us to define our groups
     gmsh.model.occ.synchronize()
     
-    # We now group together our fluid surface so that the mesh will build and the edge so that it's a facet
+    # We now group together our domain and edge so that we can grab the latter to define our boundary conditions
 
-    # Groups together fluid surface
+    # Tags the surface domain
     gmsh.model.addPhysicalGroup(2, [1], 1, name='domain')
-    # Groups together fluid surface boundary
+    # Tags the outer edge. 1 is the initial arc, 2 is the inner point, 3 is the outer edge
     gmsh.model.addPhysicalGroup(1, [3], 1, name='edge')
 
-    # We generate the mesh
+    # We now generate the mesh
 
     # Sets the mesh sizing
     gmsh.option.setNumber("Mesh.CharacteristicLengthMin", params['minsize'])

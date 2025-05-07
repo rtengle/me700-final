@@ -15,8 +15,10 @@ This codebase simulates the surface evolution of a temperature-controlled liquid
 The dynamics of this system is largely governed by two mechanisms: Surface tension where curvature along the fluid surface generates a surface pressure; and themocapillary flow where temperature gradients along a surface generates shear flow, draining the thin film from hot spots and into cold spots. With these effects the surface can be manipulated by prescribing a temperature profile at the solid surface the film sits atop. For the liquid space telescope, the following non-dimensional equation describes the time evolution of the fluid surface:
 
 ```math
-\frac{\partial H}{\partial \tau} + \nabla \cdot \left( \frac{1}{3} S H^3 \nabla(\nabla^2 H) + \frac{1}{2} H^2 \nabla \theta_H \right) = 0 \\
-
+\frac{\partial H}{\partial \tau} + \nabla \cdot \left( \frac{1}{3} S H^3 \nabla(\nabla^2 H) + \frac{1}{2} H^2 \nabla \theta_H \right) = 0
+```
+ 
+```math
 \theta_H = \theta_0 - \frac{F}{K} H
 ```
 
@@ -57,3 +59,9 @@ figurename : Name of gif file
 ```
 
 The method ```run_sim``` is found in ```run_sim.py```. 
+
+## Scheme Overview
+
+This problem is solved using a weak formulation plus an implicit scheme to solve for an updated fluid surface at each time step and iterate it one step forward. We then save the current surface as the previous one and iterate until all time steps have been solved for. 
+
+The software uses the NonlinearProblem to define the residual and jacobian and uses a direct Newton-Krylov nonlinear solver to find the H and eta at each time step. The solver and settings were copied from the Cahn-Hillard ```dolfinx``` tutorial.
