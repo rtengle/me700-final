@@ -27,11 +27,11 @@ def get_bc(params, S, facet_markers):
     """
     # Define the boundary conditions on H dofs
     Hfacets = fem.locate_dofs_topological(S.sub(0), 1, facet_markers.find(1))
-    bcH = fem.dirichletbc(default_real_type(params['Hpin']), Hfacets, S.sub(0))
+    bcH = fem.dirichletbc(params['Hpin'], Hfacets, S.sub(0))
 
     # Define the boundary condition on eta dofs
     etafacets = fem.locate_dofs_topological(S.sub(1), 1, facet_markers.find(1))
-    bceta = fem.dirichletbc(default_real_type(params['etapin']), etafacets, S.sub(1))
+    bceta = fem.dirichletbc(params['etapin'], etafacets, S.sub(1))
 
     return [bcH, bceta]
 
@@ -96,7 +96,7 @@ def create_solver(params, mesh_triplet):
 
     # Initial conditions
     s.x.array[:] = 0.0
-    s.sub(0).x.array[:] = params['H0']
+    s.sub(0).interpolate(params['H0'])
     s.x.scatter_forward()
 
     # Define our weak form
