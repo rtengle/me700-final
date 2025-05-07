@@ -41,7 +41,7 @@ jobs:
         run: pip install pytest pytest-cov
 
       - name: Install DOLFINx with MPICH (Unix-like)
-        run: conda install -c conda-forge fenics-dolfinx mpich pyvista
+        run: conda install -c conda-forge fenics-dolfinx mpich pyvista gmsh
 
       - name: Run tests with coverage
         run: pytest --cov=. --cov-report=xml
