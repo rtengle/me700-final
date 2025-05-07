@@ -29,7 +29,6 @@ jobs:
           auto-update-conda: true
           python-version: ${{ matrix.python-version }}
           miniforge-version: latest
-
         
       - name: Install DOLFINx with MPICH (Unix-like)
         shell: bash -el {0}
@@ -38,6 +37,9 @@ jobs:
       - name: Install dependencies
         shell: bash -el {0}
         run: pip install -e .
+
+      - name: Install test dependencies
+        run: pip install pytest pytest-cov
 
       - name: Run tests with coverage
         run: pytest --cov=. --cov-report=xml
