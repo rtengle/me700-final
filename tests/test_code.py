@@ -1,7 +1,6 @@
-from meshing import *
-from weak_form import *
-from solver_loop import *
-from run_sim import *
+from meshing import create_mesh
+from weak_form import get_bc, get_functionspace, get_solver, create_solver
+from run_sim import run_sim
 import pytest
 
 params = dict()
