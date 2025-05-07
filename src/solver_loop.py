@@ -18,8 +18,6 @@ from dolfinx.nls.petsc import NewtonSolver
 from meshing import *
 from weak_form import *
 
-from pathlib import Path
-
 def configure_gif_plotter(params, warped, plotter):
     # Set the color map
     cmap = mpl.colormaps.get_cmap("magma").resampled(50)
@@ -56,10 +54,6 @@ def solver_loop(params, mesh_triplet, solver, function_triplet):
 
     h = s.sub(0)
 
-    results_folder = Path(params['foldername'])
-    results_folder.mkdir(exist_ok=True, parents=True)
-    filename = results_folder / params['filename']
-
     if params['plot']:
         pyvista.OFF_SCREEN = True
         pyvista.start_xvfb()
@@ -77,7 +71,7 @@ def solver_loop(params, mesh_triplet, solver, function_triplet):
 
         renderer = configure_gif_plotter(params, warped, plotter)
 
-    with io.VTXWriter(domain.comm, filename.with_suffix('.bp'), [s.sub(0), s.sub(1)]) as vtx:
+    with io.VTXWriter(domain.comm, f'{params['foldername']}/{params['filename']}.bp', [s.sub(0), s.sub(1)]) as vtx:
         t = 0
         vtx.write(t)
         for i in range(params['N']):
