@@ -14,4 +14,4 @@ where $H$ describes the fluid thickness and $\theta$ describes the fluid tempera
 
 ## Overview
 
-This codebase simulates a fluid film along a given surface. All that is needed to be done is use the ```run_sim``` command in the file of the same name and pass through a dict with the simulation parameters.
+This codebase simulates a fluid film along a given surface. All that is needed to be done is use the ```run_sim``` command in the file of the same name and pass through a dict with the simulation parameters. These parameters are as follows:

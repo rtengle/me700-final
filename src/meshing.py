@@ -43,7 +43,11 @@ def create_mesh(params) -> tuple:
     gmsh.clear()
 
     # Our domain is a flat 2D disk. This also generates an exterior loop around it
-    gmsh.model.occ.addDisk(0, 0, 0, params['gamma0'], params['gamma0'], 1)
+    # gmsh.model.occ.addDisk(0, 0, 0, params['gamma0'], params['gamma0'], 1)
+
+    gmsh.model.occ.addCircle(0, 0, 0, 1, 1, 0, params['gamma0'], [-1, 0, 0])
+    gmsh.model.occ.revolve([(1,1)], 0, 0, 0, 0, 0, 1, 2*np.pi)
+    gmsh.model.occ.addSurfaceLoop([1], 2)
 
     # We then synchronize the CAD model with our gmsh model allowing us to define our groups
     gmsh.model.occ.synchronize()
@@ -53,7 +57,7 @@ def create_mesh(params) -> tuple:
     # Groups together fluid surface
     gmsh.model.addPhysicalGroup(2, [1], 1, name='domain')
     # Groups together fluid surface boundary
-    gmsh.model.addPhysicalGroup(1, [1], 1, name='edge')
+    gmsh.model.addPhysicalGroup(1, [3], 1, name='edge')
 
     # We generate the mesh
 

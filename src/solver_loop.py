@@ -56,25 +56,26 @@ def solver_loop(params, mesh_triplet, solver, function_triplet):
 
     h = s.sub(0)
 
-    pyvista.OFF_SCREEN = True
-    pyvista.start_xvfb()
-
-    grid = pyvista.UnstructuredGrid(*vtk_mesh(S0))
-
-    # Create a plotter that will create a .gif
-    plotter = pyvista.Plotter()
-    plotter.open_gif(f"figures/{params['figurename']}.gif", fps=10)
-
-    # Stores the H data
-    grid.point_data["H"] = s.x.array[dofs]
-    warped = grid.warp_by_scalar("H", factor=1)
-    # I think warp adds a height map on a grid
-
-    renderer = configure_gif_plotter(params, warped, plotter)
-
     results_folder = Path(params['foldername'])
     results_folder.mkdir(exist_ok=True, parents=True)
     filename = results_folder / params['filename']
+
+    if params['plot']:
+        pyvista.OFF_SCREEN = True
+        pyvista.start_xvfb()
+
+        grid = pyvista.UnstructuredGrid(*vtk_mesh(S0))
+
+        # Create a plotter that will create a .gif
+        plotter = pyvista.Plotter()
+        plotter.open_gif(f"figures/{params['figurename']}.gif", fps=10)
+
+        # Stores the H data
+        grid.point_data["H"] = s.x.array[dofs]
+        warped = grid.warp_by_scalar("H", factor=1)
+        # I think warp adds a height map on a grid
+
+        renderer = configure_gif_plotter(params, warped, plotter)
 
     with io.VTXWriter(domain.comm, filename.with_suffix('.bp'), [s.sub(0), s.sub(1)]) as vtx:
         t = 0
@@ -84,8 +85,9 @@ def solver_loop(params, mesh_triplet, solver, function_triplet):
             s0.x.array[:] = s.x.array
             r = solver.solve(s)
             print(f"Step {i}: num iterations: {r[0]}")
-            # file.write_function(h, t)
-            update_warped(warped, grid, plotter, s.x.array[dofs])
             vtx.write(t)
+            if params['plot']:
+                update_warped(warped, grid, plotter, s.x.array[dofs])
 
-        plotter.close()
+        if params['plot']:
+            plotter.close()
