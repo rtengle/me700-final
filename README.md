@@ -4,7 +4,7 @@
 [![license](https://img.shields.io/badge/license-MIT-green.svg)](https://github.com/sandialabs/sibl#license)
 
 [![codecov](https://codecov.io/gh/rtengle/me700-final/graph/badge.svg?token=2Q1GLARIMP)](https://codecov.io/gh/rtengle/me700-final)
-[![tests](https://github.com/rtengle/me700-final/actions/workflows/tests.yml/badge.svg)](https://github.com/rtengle/me700-hw2/actions)
+[![tests](https://github.com/rtengle/me700-final/actions/workflows/tests.yml/badge.svg)](https://github.com/rtengle/me700-final/actions)
 
 ## Overview
 
