@@ -60,9 +60,9 @@ def check_steady_state():
     params['F/K'] = FK
     params['degree'] = 4
     params['rtol'] = 1e-12
-    params['filename'] = 'data'
+    params['filename'] = 'steady_state'
     params['foldername'] = 'results'
-    params['figurename'] = 'H_animation'
+    params['figurename'] = 'H_steady_state'
     params['plot'] = True
 
     mesh_triplet = create_mesh(params)

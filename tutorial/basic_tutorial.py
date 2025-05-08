@@ -19,16 +19,16 @@ from dolfinx import default_real_type
 
 params = dict()
 params['flat'] = False
-params['gamma0'] = np.pi/4
+params['gamma0'] = 1
 params['minsize'] = 5e-2
 params['maxsize'] = 5e-2
 params['Hpin'] = lambda x: default_real_type(1)
 params['etapin'] = lambda x: default_real_type(0)
 params['H0'] = lambda x: default_real_type(1)
-params['dt'] = 1e-1
-params['S'] = 1e-1
-params['N'] = 33
-params['theta0'] = lambda x: ufl.exp(-1e-2*x[0]**2 - 1e-2*x[1]**2)
+params['dt'] = 5e-3
+params['S'] = 5e-2
+params['N'] = 50
+params['theta0'] = lambda x: 2*ufl.exp(-100*( (x[0]/params['gamma0'])**2 + (x[1]/params['gamma0'])**2 ))
 params['degree'] = 2
 params['F/K'] = 2
 params['rtol'] = 1e-6
