@@ -10,7 +10,7 @@
 
 This codebase simulates the surface evolution of a temperature-controlled liquid space telescope using FEniCSx. In this system, a thin film of fluid sits atop a solid spherical surface with a prescribed base temperature. The top surface is free to deform and points into the deep vacuum of space where energy is released via radiation. 
 
-![alt text](REAME_figures/H_animation.gif)
+![alt text](REAME_files/H_animation.gif)
 
 The dynamics of this system is largely governed by two mechanisms: Surface tension where curvature along the fluid surface generates a surface pressure; and themocapillary flow where temperature gradients along a surface generates shear flow, draining the thin film from hot spots and into cold spots. With these effects the surface can be manipulated by prescribing a temperature profile at the solid surface the film sits atop. For the liquid space telescope, the following non-dimensional equation describes the time evolution of the fluid surface:
 
@@ -86,7 +86,7 @@ H = 1 - r^2 + r^4 \qquad H(r=1) = 1 \qquad \nabla^2H(r = 1) = -12
 
 If this truly is a steady-state solution, setting these as temperature distribution, initial surface geometry, and surface boundary conditions should result in a steady-state simulation. This problem is reflected in ```check_steady_state``` in ```run_sim```. The following gif shows the simulation results.
 
-![alt text](REAME_figures/H_steady_state.gif)
+![alt text](REAME_files/H_steady_state.gif)
 
 As seen in the gif, the simulation is stable for the initial time steps and acts as a validation. Something to note is that these steady-state solutions were not expected to be stable. It can be shown for some temperature distributions that a stable steady-state can be achieved, but for this solution steady-state is not achieved. If this is run long enough, the solution will no longer be steady-state and will start infinitely drawing in fluid towards the center. Either way, it's a good enough validation that the simulation is reflecting the desired PDE.
 
