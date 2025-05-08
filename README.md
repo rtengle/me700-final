@@ -61,6 +61,10 @@ figurename : Name of gif file
 
 The method ```run_sim``` is found in ```run_sim.py```. 
 
+## Reproducibility
+
+Reproducing the results is very easy. All that needs to be done is constructing the proper parameter dictionary and passing it to ```run_sim```. The parameters used for the simulation shown above is in ```basic_tutorial.py```.
+
 ## Scheme Overview
 
 This problem is solved using a weak formulation plus an implicit scheme to solve for an updated fluid surface at each time step and iterate it one step forward. We then save the current surface as the previous one and iterate until all time steps have been solved for. 
@@ -88,7 +92,7 @@ As seen in the gif, the simulation is stable for the initial time steps and acts
 
 ## Code Structure
 
-The main code is split into three parts: ```meshing``` which handles constructing the model and meshing it; ```weak_form``` which assembles the function space, weak formulation, and constructs the solver; and finally ```solver_loop``` which performs the implicit scheme to solve for the film surface at each time step. These are all called from the functions in ```run_sim``` which is the main access point for the user.
+The main code is split into three parts: ```meshing.py``` which handles constructing the model and meshing it; ```weak_form.py``` which assembles the function space, weak formulation, and constructs the solver; and finally ```solver_loop.py``` which performs the implicit scheme to solve for the film surface at each time step. These are all called from the functions in ```run_sim.py``` which is the main access point for the user.
 
 ## Skillsets
 
