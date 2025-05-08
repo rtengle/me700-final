@@ -22,16 +22,17 @@ def get_functionspace(params, domain):
     S = fem.functionspace(domain, Se)
     return S
 
-def get_bc(params, S, facet_markers):
+def get_bc(params, S, domain, facet_markers):
     """Internal function used to get the dirichlet BC for H and eta
     """
+    x = ufl.SpatialCoordinate(domain)
     # Define the boundary conditions on H dofs
     Hfacets = fem.locate_dofs_topological(S.sub(0), 1, facet_markers.find(1))
-    bcH = fem.dirichletbc(default_real_type(params['Hpin']), Hfacets, S.sub(0))
+    bcH = fem.dirichletbc(params['Hpin'](x), Hfacets, S.sub(0))
 
     # Define the boundary condition on eta dofs
     etafacets = fem.locate_dofs_topological(S.sub(1), 1, facet_markers.find(1))
-    bceta = fem.dirichletbc(default_real_type(params['etapin']), etafacets, S.sub(1))
+    bceta = fem.dirichletbc(params['etapin'](x), etafacets, S.sub(1))
 
     return [bcH, bceta]
 
@@ -94,11 +95,6 @@ def create_solver(params, mesh_triplet):
     s.sub(0).name = 'Height'
     s.sub(1).name = 'Curvature'
 
-    # Initial conditions
-    s.x.array[:] = 0.0
-    s.sub(0).x.array[:] = params['H0']
-    s.x.scatter_forward()
-
     # Define our weak form
 
     dt = params['dt']
@@ -114,20 +110,28 @@ def create_solver(params, mesh_triplet):
     # Weak formulation for surface height
     FH = (
         ufl.inner(H - H0, q) * ufl.dx
-        - dt * Sp/3 * ( ufl.inner( H**3, ufl.inner(ufl.grad(q) , ufl.grad(eta)) ) ) * ufl.dx
-        + dt * 1/2 * H**2 * ufl.inner(ufl.grad(q) , ufl.grad(theta)) * ufl.dx
+        - dt * Sp/3 * H**3 * ufl.inner(ufl.grad(q), ufl.grad(eta)) * ufl.dx
+        + dt * 1/2 * H**2 * ufl.inner(ufl.grad(q), ufl.grad(theta)) * ufl.dx
         + dt * q * ufl.inner(H**3 * ufl.grad(eta) - H**2 * ufl.grad(theta), n) * ufl.ds
     )
     # Weak formulation for eta-H relationship
     Feta = (
         (ufl.inner(eta,v) + ufl.dot(ufl.grad(v), ufl.grad(H))) * ufl.dx
-        -  ufl.inner(v * ufl.grad(H), n)* ufl.ds
+        -  ufl.inner(v * ufl.grad(H), n) * ufl.ds
     )
     # Combine together to get complete weak formulation
     F = FH + Feta
 
     # Get the boundary conditions for the system
-    bc = get_bc(params, S, facet_markers)
+    bc = get_bc(params, S, domain, facet_markers)
+
+    # Initial conditions
+    s.x.array[:] = 0.0
+    if type(params['H0'](x)) is np.float64:
+        s.sub(0).x.array[:] = params['H0'](x)
+    else:
+        s.sub(0).interpolate(params['H0'])
+    s.x.scatter_forward()
 
     # Set up and configure our non-linear problem solver
 

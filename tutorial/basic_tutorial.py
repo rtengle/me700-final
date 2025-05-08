@@ -1,5 +1,7 @@
-from run_sim import run_sim
+from run_sim import run_sim, check_steady_state
 import ufl
+import numpy as np
+from dolfinx import default_real_type
 
 # This is a very quick tutorial on how to use the codebase. Below is a set of parameters describing the following experiment:
 #
@@ -16,18 +18,19 @@ import ufl
 # Finally we save our results to the results folder under the name data, set plot to true, and save our figure as H_animation
 
 params = dict()
+params['flat'] = False
 params['gamma0'] = np.pi/4
 params['minsize'] = 5e-2
 params['maxsize'] = 5e-2
-params['Hpin'] = 1
-params['etapin'] = 0
-params['H0'] = 1
+params['Hpin'] = lambda x: default_real_type(1)
+params['etapin'] = lambda x: default_real_type(0)
+params['H0'] = lambda x: default_real_type(1)
 params['dt'] = 1e-1
 params['S'] = 1e-1
 params['N'] = 33
 params['theta0'] = lambda x: ufl.exp(-1e-2*x[0]**2 - 1e-2*x[1]**2)
-params['F/K'] = 2
 params['degree'] = 2
+params['F/K'] = 2
 params['rtol'] = 1e-6
 params['filename'] = 'data'
 params['foldername'] = 'results'

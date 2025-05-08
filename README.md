@@ -39,6 +39,7 @@ pip install -e .
 With the environment set up, call ```run_sim(params)``` with ```params``` being a dictionary containing the following parameters:
 
 ```
+flat : Whether the film rests on a flat surface or a curved spherical surface
 gamma0 : Polar dista covered by the telescope surface
 theta0 : Function describing the temperature profile
 S : Surface tension constant
