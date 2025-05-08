@@ -20,6 +20,8 @@ def create_mesh(params) -> tuple:
     ----------
     params : dict
         Dictionary containing all user-defined settings for the simulation. Needs to contain at least the following:
+        flat : bool
+            If true, the mesh will be a flat surface. If false, the mesh will be a spherical shell
         gamma0 : float
             Half-arc length of analyzed region
         minsize : float

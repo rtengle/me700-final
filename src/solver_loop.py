@@ -116,3 +116,5 @@ def solver_loop(params, mesh_triplet, solver, function_triplet):
 
         # Closes the vtx file
         vtx.close()
+
+    return (s, s0, S)
